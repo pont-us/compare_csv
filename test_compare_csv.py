@@ -31,24 +31,6 @@ class TestCompareCsv(unittest.TestCase):
                 ["wibble", "3.5", "-10.00000"],
                 ["wibble", "3.500", "-11.00000"]), str))
 
-    def test_compare_lines_equal(self):
-        line0 = "one\ttwo\t3.5\t4.0"
-        self.assertIsNone(self.comparer.compare_lines(line0, line0))
-
-    def test_compare_lines_unequal(self):
-        self.assertTrue(isinstance(
-            self.comparer.compare_lines("Something", "Something else"), str))
-
-    def test_compare_lines_numerically_equal(self):
-        self.assertIsNone(
-            self.comparer.compare_lines("one\ttwo\t3.5\t4.0",
-                                      "one\ttwo\t3.500\t4"))
-
-    def test_compare_lines_numerically_unequal(self):
-        self.assertTrue(isinstance(
-            self.comparer.compare_lines("one\ttwo\t3.5\t4.0",
-                                      "one\ttwo\t3.500\t4.4"), str))
-
     def test_compare_linelists_numerically_equal(self):
         self.assertIsNone(
             self.comparer.compare_linelists(

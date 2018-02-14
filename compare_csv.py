@@ -49,14 +49,6 @@ class CsvComparer:
 
         return None
 
-    def compare_lines(self, line0: str, line1: str) -> Optional[str]:
-        stripped = (line0.strip(), line1.strip())
-        if stripped[0] == stripped[1]:
-            return None
-
-        fields = [s.split(self.separator) for s in stripped]
-        return self.compare_fields(*fields)
-
     def compare_linelists(self, list0: List[str], list1: List[str]) ->\
             Optional[str]:
         if len(list0) != len(list1):
