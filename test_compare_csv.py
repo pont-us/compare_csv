@@ -63,6 +63,13 @@ class TestCompareCsv(unittest.TestCase):
                 ["same1", "same2\tsame2", "same\t3.0\t0.0", "same4\tsame4"],
             ), str))
 
+    def test_compare_linelists_modulo_quotation_marks(self):
+        self.assertIsNone(
+            self.comparer.compare_linelists(
+                ["one\ttwo\tthree"],
+                ["one\t\"two\"\tthree"]
+            ))
+
 
 if __name__ == "__main__":
     unittest.main()

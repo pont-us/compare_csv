@@ -2,15 +2,16 @@
 
 from typing import List, Optional
 import argparse
+import csv
 
 
 class CsvComparer:
 
     def __init__(self, separator=","):
         self.separator = separator
-        self.precision = 0.01
+        self.precision = 0.001
 
-    def are_equal_numerical(self, string0: str, string1: str) -> bool:
+    def are_essentially_equal(self, string0: str, string1: str) -> bool:
         if string0 == string1:
             return True
 
@@ -25,7 +26,8 @@ class CsvComparer:
             # float, so unequal
             return False
 
-    def compare_fields(self, fields0: List[str], fields1: List[str]) -> Optional[str]:
+    def compare_fields(self, fields0: List[str], fields1: List[str]) ->\
+            Optional[str]:
         """
         Compare two lists of strings. If they're equal, return none.
         If not, return a string describing how they differ. The definition
@@ -41,11 +43,11 @@ class CsvComparer:
             return "Lengths differ ({}, {})".format(len(fields0), len(fields1))
 
         for i in range(len(fields0)):
-            if not self.are_equal_numerical(fields0[i], fields1[i]):
-                return "field {} differs ({}, {})".format(i, fields0[i], fields1[i])
+            if not self.are_essentially_equal(fields0[i], fields1[i]):
+                return "field {} differs ({}, {})".format(
+                    i+1, fields0[i], fields1[i])
 
         return None
-
 
     def compare_lines(self, line0: str, line1: str) -> Optional[str]:
         stripped = (line0.strip(), line1.strip())
@@ -55,14 +57,24 @@ class CsvComparer:
         fields = [s.split(self.separator) for s in stripped]
         return self.compare_fields(*fields)
 
-
-    def compare_linelists(self, list0: List[str], list1: List[str]) -> Optional[str]:
+    def compare_linelists(self, list0: List[str], list1: List[str]) ->\
+            Optional[str]:
         if len(list0) != len(list1):
             return "Unequal numbers of lines ({}, {})".\
                 format(len(list0), len(list1))
 
-        for line in range(len(list0)):
-            result = self.compare_lines(list0[line], list1[line])
+        fields = []
+        for line_list in list0, list1:
+            fields_list = []
+            fields.append(fields_list)
+            reader = csv.reader(line_list,
+                                delimiter=self.separator,
+                                skipinitialspace=True,)
+            for row in reader:
+                fields_list.append(row)
+
+        for line in range(len(fields[0])):
+            result = self.compare_fields(fields[0][line], fields[1][line])
             if result is not None:
                 return "On line {}: ".format(line+1)+result
 
@@ -84,7 +96,8 @@ def main():
         lines1 = fh.readlines()
 
     separator = bytes(args.delimiter, "utf-8").decode("unicode_escape")
-    result = compare_linelists(lines0, lines1, separator)
+    comparer = CsvComparer(separator=separator)
+    result = comparer.compare_linelists(lines0, lines1)
     if result is None:
         print("The files contain the same values.")
     else:
