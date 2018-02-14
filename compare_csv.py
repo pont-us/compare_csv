@@ -4,61 +4,70 @@ from typing import List, Optional
 import argparse
 
 
-def are_equal_numerical(string0: str, string1: str) -> bool:
-    if string0 == string1:
-        return True
+class CsvComparer:
 
-    try:
-        return float(string0) == float(string1)
-    except ValueError:
-        # not equal as strings, and not interpretable as a
-        # float, so unequal
-        return False
+    def __init__(self, separator=","):
+        self.separator = separator
+        self.precision = 0.01
 
+    def are_equal_numerical(self, string0: str, string1: str) -> bool:
+        if string0 == string1:
+            return True
 
-def compare_fields(fields0: List[str], fields1: List[str]) -> Optional[str]:
-    """
-    Compare two lists of strings. If they're equal, return none.
-    If not, return a string describing how they differ. The definition
-    of equality includes the possibility that two strings are different
-    decimal representations of the same number (e.g. "3" and "3.00").
+        try:
+            f0 = float(string0)
+            f1 = float(string1)
+            smaller = min(f0, f1)
+            fudge_factor = abs(smaller * self.precision)
+            return abs(f0-f1) <= fudge_factor
+        except ValueError:
+            # not equal as strings, and not interpretable as a
+            # float, so unequal
+            return False
 
-    :param fields0: a list of strings
-    :param fields1: another list of strings
-    :return: None if lists equal, otherwise
-    """
+    def compare_fields(self, fields0: List[str], fields1: List[str]) -> Optional[str]:
+        """
+        Compare two lists of strings. If they're equal, return none.
+        If not, return a string describing how they differ. The definition
+        of equality includes the possibility that two strings are different
+        decimal representations of the same number (e.g. "3" and "3.00").
 
-    if len(fields0) != len(fields1):
-        return "Lengths differ ({}, {})".format(len(fields0), len(fields1))
+        :param fields0: a list of strings
+        :param fields1: another list of strings
+        :return: None if lists equal, otherwise
+        """
 
-    for i in range(len(fields0)):
-        if not are_equal_numerical(fields0[i], fields1[i]):
-            return "field {} differs ({}, {})".format(i, fields0[i], fields1[i])
+        if len(fields0) != len(fields1):
+            return "Lengths differ ({}, {})".format(len(fields0), len(fields1))
 
-    return None
+        for i in range(len(fields0)):
+            if not self.are_equal_numerical(fields0[i], fields1[i]):
+                return "field {} differs ({}, {})".format(i, fields0[i], fields1[i])
 
-
-def compare_lines(line0: str, line1: str, separator=",") -> Optional[str]:
-    stripped = (line0.strip(), line1.strip())
-    if stripped[0] == stripped[1]:
         return None
 
-    fields = [s.split(separator) for s in stripped]
-    return compare_fields(*fields)
+
+    def compare_lines(self, line0: str, line1: str, separator=",") -> Optional[str]:
+        stripped = (line0.strip(), line1.strip())
+        if stripped[0] == stripped[1]:
+            return None
+
+        fields = [s.split(separator) for s in stripped]
+        return self.compare_fields(*fields)
 
 
-def compare_linelists(list0: List[str], list1: List[str],
-                      separator=",") -> Optional[str]:
-    if len(list0) != len(list1):
-        return "Unequal numbers of lines ({}, {})".\
-            format(len(list0), len(list1))
+    def compare_linelists(self, list0: List[str], list1: List[str],
+                          separator=",") -> Optional[str]:
+        if len(list0) != len(list1):
+            return "Unequal numbers of lines ({}, {})".\
+                format(len(list0), len(list1))
 
-    for line in range(len(list0)):
-        result = compare_lines(list0[line], list1[line], separator)
-        if result is not None:
-            return "On line {}: ".format(line+1)+result
+        for line in range(len(list0)):
+            result = self.compare_lines(list0[line], list1[line], separator)
+            if result is not None:
+                return "On line {}: ".format(line+1)+result
 
-    return None
+        return None
 
 
 def main():
