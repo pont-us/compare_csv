@@ -42,25 +42,25 @@ class TestCompareCsv(unittest.TestCase):
     def test_compare_lines_numerically_equal(self):
         self.assertIsNone(
             self.comparer.compare_lines("one\ttwo\t3.5\t4.0",
-                                      "one\ttwo\t3.500\t4", "\t"))
+                                      "one\ttwo\t3.500\t4"))
 
     def test_compare_lines_numerically_unequal(self):
         self.assertTrue(isinstance(
             self.comparer.compare_lines("one\ttwo\t3.5\t4.0",
-                                      "one\ttwo\t3.500\t4.4", "\t"), str))
+                                      "one\ttwo\t3.500\t4.4"), str))
 
     def test_compare_linelists_numerically_equal(self):
         self.assertIsNone(
             self.comparer.compare_linelists(
-                ["same1", "same2,same2", "same,3.00,0", "same4,same4"],
-                ["same1", "same2,same2", "same,3.0,0.0", "same4,same4"],
+                ["same1", "same2\tsame2", "same\t3.00\t0", "same4\tsame4"],
+                ["same1", "same2\tsame2", "same\t3.0\t0.0", "same4\tsame4"],
             ))
 
     def test_compare_linelists_numerically_unequal(self):
         self.assertTrue(isinstance(
             self.comparer.compare_linelists(
-                ["same1", "same2,same2", "same,3.1,0", "same4,same4"],
-                ["same1", "same2,same2", "same,3.0,0.0", "same4,same4"],
+                ["same1", "same2\tsame2", "same\t3.1\t0", "same4\tsame4"],
+                ["same1", "same2\tsame2", "same\t3.0\t0.0", "same4\tsame4"],
             ), str))
 
 

@@ -47,23 +47,22 @@ class CsvComparer:
         return None
 
 
-    def compare_lines(self, line0: str, line1: str, separator=",") -> Optional[str]:
+    def compare_lines(self, line0: str, line1: str) -> Optional[str]:
         stripped = (line0.strip(), line1.strip())
         if stripped[0] == stripped[1]:
             return None
 
-        fields = [s.split(separator) for s in stripped]
+        fields = [s.split(self.separator) for s in stripped]
         return self.compare_fields(*fields)
 
 
-    def compare_linelists(self, list0: List[str], list1: List[str],
-                          separator=",") -> Optional[str]:
+    def compare_linelists(self, list0: List[str], list1: List[str]) -> Optional[str]:
         if len(list0) != len(list1):
             return "Unequal numbers of lines ({}, {})".\
                 format(len(list0), len(list1))
 
         for line in range(len(list0)):
-            result = self.compare_lines(list0[line], list1[line], separator)
+            result = self.compare_lines(list0[line], list1[line])
             if result is not None:
                 return "On line {}: ".format(line+1)+result
 
