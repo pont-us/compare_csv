@@ -4,7 +4,6 @@
     <list default="true" id="a7a28179-42e4-4763-a787-19837174d0e0" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/../compare_csv/.idea/workspace.xml" afterPath="$PROJECT_DIR$/../compare_csv/.idea/workspace.xml" />
       <change beforePath="$PROJECT_DIR$/../compare_csv/compare_csv.py" afterPath="$PROJECT_DIR$/../compare_csv/compare_csv.py" />
-      <change beforePath="$PROJECT_DIR$/../compare_csv/test_compare_csv.py" afterPath="$PROJECT_DIR$/../compare_csv/test_compare_csv.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -18,8 +17,8 @@
       <file leaf-file-name="test_compare_csv.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../compare_csv/test_compare_csv.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="712">
-              <caret line="39" column="0" lean-forward="true" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
+            <state relative-caret-position="1197">
+              <caret line="57" column="0" lean-forward="true" selection-start-line="57" selection-start-column="0" selection-end-line="57" selection-end-column="0" />
               <folding>
                 <element signature="e#24#42#0" expanded="true" />
               </folding>
@@ -30,10 +29,10 @@
       <file leaf-file-name="compare_csv.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/../compare_csv/compare_csv.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="231">
-              <caret line="11" column="29" lean-forward="false" selection-start-line="11" selection-start-column="29" selection-end-line="11" selection-end-column="29" />
+            <state relative-caret-position="210">
+              <caret line="10" column="27" lean-forward="false" selection-start-line="10" selection-start-column="27" selection-end-line="10" selection-end-column="27" />
               <folding>
-                <element signature="e#24#57#0" expanded="true" />
+                <element signature="e#1135#1168#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -468,8 +467,8 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/../compare_csv/test_compare_csv.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="712">
-          <caret line="39" column="0" lean-forward="true" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
+        <state relative-caret-position="1197">
+          <caret line="57" column="0" lean-forward="true" selection-start-line="57" selection-start-column="0" selection-end-line="57" selection-end-column="0" />
           <folding>
             <element signature="e#24#42#0" expanded="true" />
           </folding>
@@ -478,10 +477,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../compare_csv/compare_csv.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="231">
-          <caret line="11" column="29" lean-forward="false" selection-start-line="11" selection-start-column="29" selection-end-line="11" selection-end-column="29" />
+        <state relative-caret-position="210">
+          <caret line="10" column="27" lean-forward="false" selection-start-line="10" selection-start-column="27" selection-end-line="10" selection-end-column="27" />
           <folding>
-            <element signature="e#24#57#0" expanded="true" />
+            <element signature="e#1135#1168#0" expanded="true" />
           </folding>
         </state>
       </provider>
