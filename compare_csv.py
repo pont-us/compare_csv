@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from typing import List, Optional
+import argparse
 
 
 def are_equal_numerical(string0: str, string1: str) -> bool:
@@ -44,3 +45,44 @@ def compare_lines(line0: str, line1: str, separator=",") -> Optional[str]:
 
     fields = [s.split(separator) for s in stripped]
     return compare_fields(*fields)
+
+
+def compare_linelists(list0: List[str], list1: List[str],
+                      separator=",") -> Optional[str]:
+    if len(list0) != len(list1):
+        return "Unequal numbers of lines ({}, {})".\
+            format(len(list0), len(list1))
+
+    for line in range(len(list0)):
+        result = compare_lines(list0[line], list1[line], separator)
+        if result is not None:
+            return "On line {}: ".format(line+1)+result
+
+    return None
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Compare two delimited files")
+    parser.add_argument("-d", "--delimiter", type=str, required=False,
+                        help="delimiter between fields", default=",")
+    parser.add_argument("FILE1", type=str)
+    parser.add_argument("FILE2", type=str)
+    args = parser.parse_args()
+
+    with open(args.FILE1) as fh:
+        lines0 = fh.readlines()
+
+    with open(args.FILE2) as fh:
+        lines1 = fh.readlines()
+
+    separator = bytes(args.delimiter, "utf-8").decode("unicode_escape")
+    result = compare_linelists(lines0, lines1, separator)
+    if result is None:
+        print("The files contain the same values.")
+    else:
+        print(result)
+
+
+if __name__ == "__main__":
+    main()
+

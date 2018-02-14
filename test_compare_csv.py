@@ -46,6 +46,19 @@ class TestCompareCsv(unittest.TestCase):
             compare_csv.compare_lines("one\ttwo\t3.5\t4.0",
                                       "one\ttwo\t3.500\t4.0001", "\t"), str))
 
+    def test_compare_linelists_numerically_equal(self):
+        self.assertIsNone(
+            compare_csv.compare_linelists(
+                ["same1", "same2,same2", "same,3.00,0", "same4,same4"],
+                ["same1", "same2,same2", "same,3.0,0.0", "same4,same4"],
+            ))
+
+    def test_compare_linelists_numerically_unequal(self):
+        self.assertTrue(isinstance(
+            compare_csv.compare_linelists(
+                ["same1", "same2,same2", "same,3.001,0", "same4,same4"],
+                ["same1", "same2,same2", "same,3.0,0.0", "same4,same4"],
+            ), str))
 
 
 if __name__ == "__main__":
