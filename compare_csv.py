@@ -26,28 +26,78 @@
 from typing import List, Optional
 import argparse
 import csv
+import re
+import math
 
 
 class CsvComparer:
 
     def __init__(self, separator=","):
         self.separator = separator
-        self.precision = 0.001
 
-    def are_essentially_equal(self, string0: str, string1: str) -> bool:
+    @staticmethod
+    def are_equal_to_given_precision(string0: str, string1: str) -> bool:
         if string0 == string1:
             return True
 
         try:
-            f0 = float(string0)
-            f1 = float(string1)
-            smaller = min(f0, f1)
-            fudge_factor = abs(smaller * self.precision)
-            return abs(f0-f1) <= fudge_factor
+            floats = [float(s) for s in (string0, string1)]
+            sig_figs = [CsvComparer.sig_figs(s) for s in (string0, string1)]
         except ValueError:
-            # not equal as strings, and not interpretable as a
-            # float, so unequal
             return False
+
+        if floats[0] == floats[1]:
+            # This catches the case where we're comparing -0 with 0,
+            # which would otherwise return an incorrect False result.
+            return True
+
+        if math.copysign(floats[0], floats[1]) != floats[0]:
+            # opposite signs (and we know they're non-zero)
+            return False
+
+        positives = [abs(x) for x in floats]
+
+        if positives[0] >= positives[1] * 10 or \
+           positives[1] >= positives[0] * 10:
+            return False
+        # We've now established that they have the same order of magnitude.
+
+        digits = [CsvComparer.extract_mantissa_digits(s)
+                  for s in (string0, string1)]
+        digits_padded = \
+            [digits[i] + ("0" * (max(sig_figs) - sig_figs[i])) for i in (0, 1)]
+        max_diff = 10**(max(sig_figs) - min(sig_figs))
+
+        ints = [int(d) for d in digits_padded]
+
+        # This is a bit of a hack to account for the rare cases where
+        # the two numbers straddle a power of ten (e.g. 9.9952E-8 vs. 1.00E-07).
+        # In this case the sig. fig. counting technique puts out out by
+        # an order of magnitude. We do a straightforward empirical check to
+        # correct this, also checking the parsed float values to make sure
+        # that we're not "correcting" a real difference in the original numbers.
+        if ints[0] * 9 < ints[1] and positives[0] * 9 >= positives[1]:
+            ints[0] *= 10
+        if ints[1] * 9 < ints[0] and positives[1] * 9 >= positives[0]:
+            ints[1] *= 10
+
+        return abs(ints[0] - ints[1]) < max_diff
+
+    @staticmethod
+    def extract_mantissa_digits(literal: str) -> Optional[str]:
+        match = re.match(r"^[-+]?([0-9]*)\.?([0-9]+)([eE][-+]?[0-9]+)?$",
+                         literal)
+        if match is None:
+            return None
+        return match.group(1) + match.group(2)
+
+    @staticmethod
+    def sig_figs(literal: str) -> int:
+        match = re.match(r"^[-+]?([0-9]*)\.?([0-9]+)([eE][-+]?[0-9]+)?$",
+                         literal)
+        if match is None:
+            return -1
+        return sum([len(match.group(i)) for i in (1, 2)])
 
     def compare_fields(self, fields0: List[str], fields1: List[str]) ->\
             Optional[str]:
@@ -69,7 +119,7 @@ class CsvComparer:
             return "Lengths differ ({}, {})".format(len(fields0), len(fields1))
 
         for i in range(len(fields0)):
-            if not self.are_essentially_equal(fields0[i], fields1[i]):
+            if not self.are_equal_to_given_precision(fields0[i], fields1[i]):
                 return "field {} differs ({}, {})".format(
                     i+1, fields0[i], fields1[i])
 
