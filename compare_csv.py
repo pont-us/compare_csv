@@ -66,7 +66,7 @@ class CsvComparer:
                   for s in (string0, string1)]
         digits_padded = \
             [digits[i] + ("0" * (max(sig_figs) - sig_figs[i])) for i in (0, 1)]
-        max_diff = 10**(max(sig_figs) - min(sig_figs))
+        max_diff = 10**(max(sig_figs) - min(sig_figs)) // 2
 
         ints = [int(d) for d in digits_padded]
 
@@ -81,7 +81,7 @@ class CsvComparer:
         if ints[1] * 9 < ints[0] and positives[1] * 9 >= positives[0]:
             ints[1] *= 10
 
-        return abs(ints[0] - ints[1]) < max_diff
+        return abs(ints[0] - ints[1]) <= max_diff
 
     @staticmethod
     def extract_mantissa_digits(literal: str) -> Optional[str]:

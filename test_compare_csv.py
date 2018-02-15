@@ -3,6 +3,7 @@
 import compare_csv
 from compare_csv import CsvComparer
 import unittest
+import random
 
 
 class TestCompareCsv(unittest.TestCase):
@@ -54,6 +55,15 @@ class TestCompareCsv(unittest.TestCase):
         check(True, "-1.8850E-6", "-1.89E-06")
         check(True, "4.3458E-5", "4.35E-05")
         check(True, "9.9952E-8", "1.00E-07")
+        check(False, "1.50", "1.49")
+        check(False, "2.0", "1.94")
+
+        rnd = random.Random(42)
+        for _ in range(10000):
+            x = (rnd.random() - 0.5) * 10**rnd.randint(0, 10)
+            s0 = "{:.{prec}g}".format(x, prec=rnd.randint(1, 7))
+            s1 = "{:.{prec}g}".format(x, prec=rnd.randint(1, 7))
+            check(True, s0, s1)
 
     def test_sig_figs(self):
         self.assertEqual(5, CsvComparer.sig_figs("12.345"))
