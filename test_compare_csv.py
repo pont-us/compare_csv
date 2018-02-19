@@ -21,7 +21,7 @@ along with compare_csv.  If not, see <http://www.gnu.org/licenses/>.
 
 
 import compare_csv
-from compare_csv import CsvComparer, EqualityLevel
+from compare_csv import CsvComparer, EqualityLevel, FieldDifference
 import unittest
 import random
 
@@ -41,7 +41,7 @@ class TestCompareCsv(unittest.TestCase):
         self.assertTrue(
             isinstance(self.comparer.compare_fields(
                 ["one", "two", "3.5", "-10.7"],
-                ["one", "3.5", "-10.7"]), str))
+                ["one", "3.5", "-10.7"]), FieldDifference))
 
     def test_compare_fields_numerically_equal(self):
         self.assertIsNone(self.comparer.compare_fields(
@@ -51,7 +51,7 @@ class TestCompareCsv(unittest.TestCase):
         self.assertTrue(
             isinstance(self.comparer.compare_fields(
                 ["wibble", "3.5", "-10.00000"],
-                ["wibble", "3.500", "-11.00000"]), str))
+                ["wibble", "3.500", "-11.00000"]), FieldDifference))
 
     def test_compare_field(self):
         def check(expected, string0, string1):
@@ -82,9 +82,9 @@ class TestCompareCsv(unittest.TestCase):
         rnd = random.Random(42)
         for _ in range(10000):
             value = (rnd.random() - 0.5) * 10**rnd.randint(0, 10)
-            string0 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
-            string1 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
-            level = CsvComparer.compare_field(string0, string1)
+            formatted0 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
+            formatted1 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
+            level = CsvComparer.compare_field(formatted0, formatted1)
             self.assertGreater(level, EqualityLevel.UNEQUAL)
 
     def test_sig_figs(self):

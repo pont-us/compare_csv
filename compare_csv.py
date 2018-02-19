@@ -29,6 +29,7 @@ import csv
 import re
 import math
 from enum import IntEnum
+from collections import namedtuple
 
 
 class EqualityLevel(IntEnum):
@@ -38,10 +39,15 @@ class EqualityLevel(IntEnum):
     IDENTICAL = 4   # the strings themselves are identical
 
 
+FieldDifference = namedtuple("FieldDifference", "field_index string0 string1")
+
+
 class CsvComparer:
 
     def __init__(self, separator=","):
         self.separator = separator
+        self.totals = {level: 0 for level in EqualityLevel}
+        self.first_difference_field = None
 
     @staticmethod
     def compare_field(string0: str, string1: str) -> EqualityLevel:
@@ -120,7 +126,7 @@ class CsvComparer:
         return sum([len(match.group(i)) for i in (1, 2)])
 
     def compare_fields(self, fields0: List[str], fields1: List[str]) ->\
-            Optional[str]:
+            Optional[FieldDifference]:
         """
         Compare two lists of strings. If they're equal, return none.
         If not, return a string describing how they differ. The definition
@@ -132,18 +138,25 @@ class CsvComparer:
 
         :param fields0: a list of strings
         :param fields1: another list of strings
-        :return: None if lists equal, otherwise
+        :return: None if lists equal, otherwise a FieldDifference object
         """
 
         if len(fields0) != len(fields1):
-            return "Lengths differ ({}, {})".format(len(fields0), len(fields1))
+            return FieldDifference(field_index=-1,
+                                   string0="{}".format(len(fields0)),
+                                   string1="{}".format(len(fields1)))
 
+        first_difference = None
         for i in range(len(fields0)):
-            if self.compare_field(fields0[i], fields1[i]) == EqualityLevel.UNEQUAL:
-                return "field {} differs ({}, {})".format(
-                    i+1, fields0[i], fields1[i])
+            level = self.compare_field(fields0[i], fields1[i])
+            self.totals[level] += 1
+            if level == EqualityLevel.UNEQUAL and \
+                    first_difference is None:
+                first_difference = FieldDifference(
+                    field_index=i, string0=fields0[i], string1=fields1[i]
+                )
 
-        return None
+        return first_difference
 
     def compare_linelists(self, list0: List[str], list1: List[str]) ->\
             Optional[str]:
@@ -165,7 +178,12 @@ class CsvComparer:
         for line in range(len(fields[0])):
             result = self.compare_fields(fields[0][line], fields[1][line])
             if result is not None:
-                return "On line {}: ".format(line+1)+result
+                #return "field {} differs ({}, {})".format(
+                #   i+1, fields0[i], fields1[i])
+
+                return "On line {}: field {} differs ({}, {})".\
+                           format(line+1, result.field_index,
+                                  result.string0, result.string1)
 
         return None
 
