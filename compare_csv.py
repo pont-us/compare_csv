@@ -28,15 +28,21 @@ import argparse
 import csv
 import re
 import math
-from enum import IntEnum
+from enum import IntEnum, Enum
 from collections import namedtuple
 
 
-class EqualityLevel(IntEnum):
-    UNEQUAL = 1     # there is no number which formats as both strings
-    COMPATIBLE = 2  # the same float could be formatted as both strings
-    NUMERICALLY_EQUAL = 3        # strings can be parsed to equal floats
-    IDENTICAL = 4   # the strings themselves are identical
+class EqualityLevel(Enum):
+    UNEQUAL = (1, "unequal")     # there is no number which formats as both strings
+    COMPATIBLE = (2, "compatible")  # the same float could be formatted as both strings
+    NUMERICALLY_EQUAL = (3, "numerically equal")        # strings can be parsed to equal floats
+    IDENTICAL = (4, "identical")   # the strings themselves are identical
+
+    def __new__(cls, value, description):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.description = description
+        return obj
 
 
 FieldDifference = namedtuple("FieldDifference", "field_index string0 string1")
@@ -209,8 +215,9 @@ def main():
     comparer = CsvComparer(separator=separator)
     result = comparer.compare_linelists(lines0, lines1)
 
-    for level, count in comparer.totals.items():
-        print(level, count)
+    for level, count in sorted(list(comparer.totals.items()),
+                               key=lambda x: x[0].value):
+        print("{:10d} {}".format(count, level.description))
 
     if result is None:
         print("The files contain the same values.")

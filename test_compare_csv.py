@@ -96,7 +96,7 @@ class TestCompareCsv(unittest.TestCase):
             formatted0 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
             formatted1 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
             level = CsvComparer.compare_field(formatted0, formatted1)
-            self.assertGreater(level, EqualityLevel.UNEQUAL)
+            self.assertGreater(level.value, EqualityLevel.UNEQUAL.value)
 
     def test_sig_figs(self):
         self.assertEqual(5, CsvComparer.sig_figs("12.345"))
