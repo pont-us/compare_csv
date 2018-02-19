@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import compare_csv
-from compare_csv import CsvComparer
+from compare_csv import CsvComparer, EqualityLevel
 import unittest
 import random
 
@@ -33,37 +33,39 @@ class TestCompareCsv(unittest.TestCase):
                 ["wibble", "3.5", "-10.00000"],
                 ["wibble", "3.500", "-11.00000"]), str))
 
-    def test_are_equal_to_given_precision(self):
-        def check(result, string0, string1):
-            self.assertEqual(result, CsvComparer.
-                             are_equal_to_given_precision(string0, string1))
+    def test_compare_field(self):
+        def check(expected, string0, string1):
+            actual = CsvComparer.compare_field(string0, string1)
+            self.assertEqual(expected, actual)
 
-        check(False, "1", "2")
-        check(True, "1", "1")
-        check(True, "1.000000", "1")
-        check(True, "1.1", "1")
-        check(True, "123.456", "123.46")
-        check(False, "123.456", "123.460")
-        check(False, "-123", "123")
-        check(True, "+14.271e3", "1.427e4")
-        check(False, "-8.912E-3", "-89.13E-4")
-        check(True, "-8.912E-3", "-89.1E-4")
-        check(True, "0", "0.000")
-        check(True, "-0", "0")
-        check(True, "-5.99e3", "-5994")
-        check(False, "foo", "bar")
-        check(True, "-1.8850E-6", "-1.89E-06")
-        check(True, "4.3458E-5", "4.35E-05")
-        check(True, "9.9952E-8", "1.00E-07")
-        check(False, "1.50", "1.49")
-        check(False, "2.0", "1.94")
+        check(EqualityLevel.UNEQUAL, "1", "2")
+        check(EqualityLevel.IDENTICAL, "1", "1")
+        check(EqualityLevel.NUMERICALLY_EQUAL, "1.000000", "1")
+        check(EqualityLevel.COMPATIBLE, "1.1", "1")
+        check(EqualityLevel.COMPATIBLE, "123.456", "123.46")
+        check(EqualityLevel.UNEQUAL, "123.456", "123.460")
+        check(EqualityLevel.UNEQUAL, "-123", "123")
+        check(EqualityLevel.COMPATIBLE, "+14.271e3", "1.427e4")
+        check(EqualityLevel.UNEQUAL, "-8.912E-3", "-89.13E-4")
+        check(EqualityLevel.COMPATIBLE, "-8.912E-3", "-89.1E-4")
+        check(EqualityLevel.NUMERICALLY_EQUAL, "0", "0.000")
+        check(EqualityLevel.NUMERICALLY_EQUAL, "-0", "0")
+        check(EqualityLevel.COMPATIBLE, "-5.99e3", "-5994")
+        check(EqualityLevel.UNEQUAL, "foo", "bar")
+        check(EqualityLevel.IDENTICAL, "foo", "foo")
+        check(EqualityLevel.COMPATIBLE, "-1.8850E-6", "-1.89E-06")
+        check(EqualityLevel.COMPATIBLE, "4.3458E-5", "4.35E-05")
+        check(EqualityLevel.COMPATIBLE, "9.9952E-8", "1.00E-07")
+        check(EqualityLevel.UNEQUAL, "1.50", "1.49")
+        check(EqualityLevel.UNEQUAL, "2.0", "1.94")
 
         rnd = random.Random(42)
         for _ in range(10000):
-            x = (rnd.random() - 0.5) * 10**rnd.randint(0, 10)
-            s0 = "{:.{prec}g}".format(x, prec=rnd.randint(1, 7))
-            s1 = "{:.{prec}g}".format(x, prec=rnd.randint(1, 7))
-            check(True, s0, s1)
+            value = (rnd.random() - 0.5) * 10**rnd.randint(0, 10)
+            string0 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
+            string1 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
+            level = CsvComparer.compare_field(string0, string1)
+            self.assertGreater(level, EqualityLevel.UNEQUAL)
 
     def test_sig_figs(self):
         self.assertEqual(5, CsvComparer.sig_figs("12.345"))

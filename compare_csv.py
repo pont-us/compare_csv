@@ -28,6 +28,14 @@ import argparse
 import csv
 import re
 import math
+from enum import IntEnum
+
+
+class EqualityLevel(IntEnum):
+    UNEQUAL = 1     # there is no number which formats as both strings
+    COMPATIBLE = 2  # the same float could be formatted as both strings
+    NUMERICALLY_EQUAL = 3        # strings can be parsed to equal floats
+    IDENTICAL = 4   # the strings themselves are identical
 
 
 class CsvComparer:
@@ -36,31 +44,37 @@ class CsvComparer:
         self.separator = separator
 
     @staticmethod
-    def are_equal_to_given_precision(string0: str, string1: str) -> bool:
+    def compare_field(string0: str, string1: str) -> EqualityLevel:
         if string0 == string1:
-            return True
+            return EqualityLevel.IDENTICAL
 
         try:
             floats = [float(s) for s in (string0, string1)]
             sig_figs = [CsvComparer.sig_figs(s) for s in (string0, string1)]
         except ValueError:
-            return False
+            # If the strings are unequal and one or both can't be parsed
+            # as floats, then they're clearly numerically unequal.
+            return EqualityLevel.UNEQUAL
 
         if floats[0] == floats[1]:
             # This catches the case where we're comparing -0 with 0,
             # which would otherwise return an incorrect False result.
-            return True
+            # It should also catch most other "numerically equal" cases,
+            # but if any slip through due to the uncertainties of
+            # floating-point equality testing, they will be caught later.
+            return EqualityLevel.NUMERICALLY_EQUAL
 
         if math.copysign(floats[0], floats[1]) != floats[0]:
             # opposite signs (and we know they're non-zero)
-            return False
+            return EqualityLevel.UNEQUAL
 
         positives = [abs(x) for x in floats]
 
         if positives[0] >= positives[1] * 10 or \
            positives[1] >= positives[0] * 10:
-            return False
+            return EqualityLevel.UNEQUAL
         # We've now established that they have the same order of magnitude.
+        # Next step is to compare_field the digits.
 
         digits = [CsvComparer.extract_mantissa_digits(s)
                   for s in (string0, string1)]
@@ -72,7 +86,7 @@ class CsvComparer:
 
         # This is a bit of a hack to account for the rare cases where
         # the two numbers straddle a power of ten (e.g. 9.9952E-8 vs. 1.00E-07).
-        # In this case the sig. fig. counting technique puts out out by
+        # In this case the sig. fig. counting technique puts us out by
         # an order of magnitude. We do a straightforward empirical check to
         # correct this, also checking the parsed float values to make sure
         # that we're not "correcting" a real difference in the original numbers.
@@ -81,7 +95,13 @@ class CsvComparer:
         if ints[1] * 9 < ints[0] and positives[1] * 9 >= positives[0]:
             ints[1] *= 10
 
-        return abs(ints[0] - ints[1]) <= max_diff
+        actual_diff = abs(ints[0] - ints[1])
+        if actual_diff == 0:
+            return EqualityLevel.NUMERICALLY_EQUAL
+        elif actual_diff <= max_diff:
+            return EqualityLevel.COMPATIBLE
+        else:
+            return EqualityLevel.UNEQUAL
 
     @staticmethod
     def extract_mantissa_digits(literal: str) -> Optional[str]:
@@ -119,7 +139,7 @@ class CsvComparer:
             return "Lengths differ ({}, {})".format(len(fields0), len(fields1))
 
         for i in range(len(fields0)):
-            if not self.are_equal_to_given_precision(fields0[i], fields1[i]):
+            if self.compare_field(fields0[i], fields1[i]) == EqualityLevel.UNEQUAL:
                 return "field {} differs ({}, {})".format(
                     i+1, fields0[i], fields1[i])
 
@@ -127,6 +147,7 @@ class CsvComparer:
 
     def compare_linelists(self, list0: List[str], list1: List[str]) ->\
             Optional[str]:
+
         if len(list0) != len(list1):
             return "Unequal numbers of lines ({}, {})".\
                 format(len(list0), len(list1))
