@@ -6,4 +6,4 @@ same data.
 Copyright 2018 Pontus Lurcock
 pont@talvi.net
 
-Released under the MIT License.
+Released under the GNU GPL v3; see the file COPYING for details.
