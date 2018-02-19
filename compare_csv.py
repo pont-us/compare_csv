@@ -175,17 +175,20 @@ class CsvComparer:
             for row in reader:
                 fields_list.append(row)
 
+        first_difference = None
         for line in range(len(fields[0])):
             result = self.compare_fields(fields[0][line], fields[1][line])
-            if result is not None:
-                #return "field {} differs ({}, {})".format(
-                #   i+1, fields0[i], fields1[i])
-
-                return "On line {}: field {} differs ({}, {})".\
-                           format(line+1, result.field_index,
+            if result is not None and first_difference is None:
+                if result.field_index == -1:
+                    first_difference =\
+                        "Differing numbers of fields on line {}".\
+                        format(line+1)
+                else:
+                    first_difference = "On line {}: field {} differs ({}, {})".\
+                           format(line+1, result.field_index+1,
                                   result.string0, result.string1)
 
-        return None
+        return first_difference
 
 
 def main():
@@ -205,10 +208,14 @@ def main():
     separator = bytes(args.delimiter, "utf-8").decode("unicode_escape")
     comparer = CsvComparer(separator=separator)
     result = comparer.compare_linelists(lines0, lines1)
+
+    for level, count in comparer.totals.items():
+        print(level, count)
+
     if result is None:
         print("The files contain the same values.")
     else:
-        print(result)
+        print("First difference:", result)
 
 
 if __name__ == "__main__":
