@@ -89,6 +89,7 @@ class TestCompareCsv(unittest.TestCase):
         check(EqualityLevel.COMPATIBLE, "9.9952E-8", "1.00E-07")
         check(EqualityLevel.UNEQUAL, "1.50", "1.49")
         check(EqualityLevel.UNEQUAL, "2.0", "1.94")
+        check(EqualityLevel.COMPATIBLE, "1.99", "1.995")
 
         rnd = random.Random(42)
         for _ in range(10000):

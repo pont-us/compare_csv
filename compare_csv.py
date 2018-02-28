@@ -33,10 +33,33 @@ from collections import namedtuple
 
 
 class EqualityLevel(Enum):
-    UNEQUAL = (1, "unequal")     # there is no number which formats as both strings
-    COMPATIBLE = (2, "compatible")  # the same float could be formatted as both strings
-    NUMERICALLY_EQUAL = (3, "numerically equal")        # strings can be parsed to equal floats
-    IDENTICAL = (4, "identical")   # the strings themselves are identical
+    """
+    Represents the degree of similarity between two strings.
+
+    UNEQUAL
+      The strings are unequal at the character level, and
+      there is no float which could be formatted as both strings.
+      (e.g. "foo" and "bar"; "1" and "2")
+
+    COMPATIBLE
+      The strings are unequal at the character level, but
+      the same float could be formatted as both strings.
+      (e.g. "1.1" and "1")
+
+    NUMERICALLY_EQUAL
+      The strings are unequal at the character level, but
+      they can be parsed to floats which have the same value.
+      (e.g. "1" and "1.0")
+
+    IDENTICAL
+      The strings are identical at the character level.
+      (e.g. "foo" and "foo"; "3.14" and "3.14")
+    """
+
+    UNEQUAL = (1, "unequal")
+    COMPATIBLE = (2, "compatible")
+    NUMERICALLY_EQUAL = (3, "numerically equal")
+    IDENTICAL = (4, "identical")
 
     def __new__(cls, value, description):
         obj = object.__new__(cls)
