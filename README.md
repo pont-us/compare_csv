@@ -33,7 +33,7 @@ at each level of equality.
 
 ## License
 
-Copyright 2018 Pontus Lurcock
+Copyright 2018, 2019 Pontus Lurcock
 pont@talvi.net
 
 Released under the GNU GPL v3; see the file COPYING for details.

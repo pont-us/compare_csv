@@ -28,7 +28,7 @@ import argparse
 import csv
 import re
 import math
-from enum import IntEnum, Enum
+from enum import Enum
 from collections import namedtuple
 
 
@@ -72,6 +72,9 @@ FieldDifference = namedtuple("FieldDifference", "field_index string0 string1")
 
 
 class CsvComparer:
+    """
+    A class to compare delimited string representations of numerical data.
+    """
 
     def __init__(self, separator=","):
         self.separator = separator
@@ -109,7 +112,7 @@ class CsvComparer:
            positives[1] >= positives[0] * 10:
             return EqualityLevel.UNEQUAL
         # We've now established that they have the same order of magnitude.
-        # Next step is to compare_field the digits.
+        # Next step is to compare the digits.
 
         digits = [CsvComparer.extract_mantissa_digits(s)
                   for s in (string0, string1)]
@@ -157,13 +160,12 @@ class CsvComparer:
     def compare_fields(self, fields0: List[str], fields1: List[str]) ->\
             Optional[FieldDifference]:
         """
-        Compare two lists of strings. If they're equal, return none.
-        If not, return a string describing how they differ. The definition
-        of equality includes the possibility that two strings are different
-        decimal representations of the same number (e.g. "3" and "3.00").
-        It also includes the possibility that the strings are representations
-        of two sufficiently close numbers. ("Sufficiently close" is not
-        yet well-defined but will be made configurable.)
+        Compare two lists of strings. If they're equal, return None. If not,
+        return a FieldDifference object describing how they differ. Strings
+        are considered equal if they have anything other than an
+        EqualityLevel.UNEQUAL level of equality. "Equality" therefore
+        includes the possibility that two strings are different decimal
+        representations of the same number (e.g. "3.0" and "3.01").
 
         :param fields0: a list of strings
         :param fields1: another list of strings
