@@ -6,7 +6,7 @@ compare_csv: determine similarity of data in delimited text files
 compare_csv reads two files in CSV or another delimited format,
 and reports on how similar their data fields are.
 
-Copyright 2018 Pontus Lurcock.
+Copyright 2018, 2019 Pontus Lurcock.
 
 compare_csv is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,13 +23,13 @@ along with compare_csv.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 
-from typing import List, Optional
 import argparse
 import csv
-import re
 import math
-from enum import Enum
+import re
 from collections import namedtuple
+from enum import Enum
+from typing import List, Optional
 
 
 class EqualityLevel(Enum):
@@ -40,6 +40,10 @@ class EqualityLevel(Enum):
       The strings are unequal at the character level, and
       there is no float which could be formatted as both strings.
       (e.g. "foo" and "bar"; "1" and "2")
+
+    CLOSE
+      The strings represent numbers which are within 1% of each other.
+      Specifically, abs(max(a, b)) <= abs(min(a, b)) * 1.01
 
     COMPATIBLE
       The strings are unequal at the character level, but
@@ -57,9 +61,10 @@ class EqualityLevel(Enum):
     """
 
     UNEQUAL = (1, "unequal")
-    COMPATIBLE = (2, "compatible")
-    NUMERICALLY_EQUAL = (3, "numerically equal")
-    IDENTICAL = (4, "identical")
+    CLOSE = (2, "close")
+    COMPATIBLE = (3, "compatible")
+    NUMERICALLY_EQUAL = (4, "numerically equal")
+    IDENTICAL = (5, "identical")
 
     def __new__(cls, value, description):
         obj = object.__new__(cls)
@@ -139,6 +144,13 @@ class CsvComparer:
         elif actual_diff <= max_diff:
             return EqualityLevel.COMPATIBLE
         else:
+            return CsvComparer._unequal_or_close(positives[0], positives[1])
+
+    @staticmethod
+    def _unequal_or_close(a, b):
+        if max(a, b) <= min(a, b) * 1.01:
+            return EqualityLevel.CLOSE
+        else:
             return EqualityLevel.UNEQUAL
 
     @staticmethod
@@ -147,7 +159,7 @@ class CsvComparer:
                          literal)
         if match is None:
             return None
-        return match.group(1) + match.group(2)
+        return (match.group(1) + match.group(2)).lstrip("0")
 
     @staticmethod
     def sig_figs(literal: str) -> int:
@@ -155,7 +167,9 @@ class CsvComparer:
                          literal)
         if match is None:
             return -1
-        return sum([len(match.group(i)) for i in (1, 2)])
+        return \
+            len((match.group(1) + match.group(2)).lstrip("0"))
+            #sum([len(match.group(i)) for i in (1, 2)])
 
     def compare_fields(self, fields0: List[str], fields1: List[str]) ->\
             Optional[FieldDifference]:
@@ -211,13 +225,14 @@ class CsvComparer:
             result = self.compare_fields(fields[0][line], fields[1][line])
             if result is not None and first_difference is None:
                 if result.field_index == -1:
-                    first_difference =\
-                        "Differing numbers of fields on line {}".\
+                    first_difference = \
+                        "Differing numbers of fields on line {}". \
                         format(line+1)
                 else:
-                    first_difference = "On line {}: field {} differs ({}, {})".\
-                           format(line+1, result.field_index+1,
-                                  result.string0, result.string1)
+                    first_difference = \
+                        "On line {}: field {} differs ({}, {})". \
+                        format(line + 1, result.field_index + 1,
+                               result.string0, result.string1)
 
         return first_difference
 
@@ -252,4 +267,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

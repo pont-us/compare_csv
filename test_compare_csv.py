@@ -35,10 +35,12 @@ class TestCompareCsv(unittest.TestCase):
         self.assertEqual(expected[0],
                          self.comparer.totals[EqualityLevel.UNEQUAL])
         self.assertEqual(expected[1],
-                         self.comparer.totals[EqualityLevel.COMPATIBLE])
+                         self.comparer.totals[EqualityLevel.CLOSE])
         self.assertEqual(expected[2],
-                         self.comparer.totals[EqualityLevel.NUMERICALLY_EQUAL])
+                         self.comparer.totals[EqualityLevel.COMPATIBLE])
         self.assertEqual(expected[3],
+                         self.comparer.totals[EqualityLevel.NUMERICALLY_EQUAL])
+        self.assertEqual(expected[4],
                          self.comparer.totals[EqualityLevel.IDENTICAL])
 
     def test_compare_fields_equal(self):
@@ -46,7 +48,7 @@ class TestCompareCsv(unittest.TestCase):
         self.assertIsNone(
             self.comparer.compare_fields(fields, fields)
         )
-        self._check_totals_counts(0, 0, 0, 4)
+        self._check_totals_counts(0, 0, 0, 0, 4)
 
     def test_compare_fields_unequal(self):
         self.assertIsInstance(self.comparer.compare_fields(
@@ -56,13 +58,13 @@ class TestCompareCsv(unittest.TestCase):
     def test_compare_fields_numerically_equal(self):
         self.assertIsNone(self.comparer.compare_fields(
             ["wibble", "3.5", "-10.00000"], ["wibble", "3.500", "-10"]))
-        self._check_totals_counts(0, 0, 2, 1)
+        self._check_totals_counts(0, 0, 0, 2, 1)
 
     def test_compare_fields_numerically_unequal(self):
         self.assertIsInstance(self.comparer.compare_fields(
                 ["wibble", "3.5", "-10.00000"],
                 ["wibble", "3.500", "-11.00000"]), FieldDifference)
-        self._check_totals_counts(1, 0, 1, 1)
+        self._check_totals_counts(1, 0, 0, 1, 1)
 
     def test_compare_field(self):
         def check(expected, string0, string1):
@@ -74,10 +76,10 @@ class TestCompareCsv(unittest.TestCase):
         check(EqualityLevel.NUMERICALLY_EQUAL, "1.000000", "1")
         check(EqualityLevel.COMPATIBLE, "1.1", "1")
         check(EqualityLevel.COMPATIBLE, "123.456", "123.46")
-        check(EqualityLevel.UNEQUAL, "123.456", "123.460")
+        check(EqualityLevel.CLOSE, "123.456", "123.460")
         check(EqualityLevel.UNEQUAL, "-123", "123")
         check(EqualityLevel.COMPATIBLE, "+14.271e3", "1.427e4")
-        check(EqualityLevel.UNEQUAL, "-8.912E-3", "-89.13E-4")
+        check(EqualityLevel.CLOSE, "-8.912E-3", "-89.13E-4")
         check(EqualityLevel.COMPATIBLE, "-8.912E-3", "-89.1E-4")
         check(EqualityLevel.NUMERICALLY_EQUAL, "0", "0.000")
         check(EqualityLevel.NUMERICALLY_EQUAL, "-0", "0")
@@ -87,9 +89,10 @@ class TestCompareCsv(unittest.TestCase):
         check(EqualityLevel.COMPATIBLE, "-1.8850E-6", "-1.89E-06")
         check(EqualityLevel.COMPATIBLE, "4.3458E-5", "4.35E-05")
         check(EqualityLevel.COMPATIBLE, "9.9952E-8", "1.00E-07")
-        check(EqualityLevel.UNEQUAL, "1.50", "1.49")
+        check(EqualityLevel.CLOSE, "1.50", "1.49")
         check(EqualityLevel.UNEQUAL, "2.0", "1.94")
         check(EqualityLevel.COMPATIBLE, "1.99", "1.995")
+        check(EqualityLevel.COMPATIBLE, "0.05", "5.40000014e-02")
 
         rnd = random.Random(42)
         for _ in range(10000):
@@ -97,7 +100,7 @@ class TestCompareCsv(unittest.TestCase):
             formatted0 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
             formatted1 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
             level = CsvComparer.compare_field(formatted0, formatted1)
-            self.assertGreater(level.value, EqualityLevel.UNEQUAL.value)
+            self.assertGreater(level.value, EqualityLevel.CLOSE.value)
 
     def test_sig_figs(self):
         self.assertEqual(5, CsvComparer.sig_figs("12.345"))
@@ -116,14 +119,14 @@ class TestCompareCsv(unittest.TestCase):
                 ["same1", "same2\tsame2", "same\t3.00\t0", "same4\tsame4"],
                 ["same1", "same2\tsame2", "same\t3.0\t0.0", "same4\tsame4"],
             ))
-        self._check_totals_counts(0, 0, 2, 6)
+        self._check_totals_counts(0, 0, 0, 2, 6)
 
     def test_compare_linelists_numerically_unequal(self):
         self.assertIsInstance(self.comparer.compare_linelists(
                 ["same1", "same2\tsame2", "same\t3.1\t0", "same4\tsame4"],
                 ["same1", "same2\tsame2", "same\t3.0\t0.0", "same4\tsame4"],
             ), str)
-        self._check_totals_counts(1, 0, 1, 6)
+        self._check_totals_counts(1, 0, 0, 1, 6)
 
     def test_compare_linelists_modulo_quotation_marks(self):
         self.assertIsNone(
