@@ -81,13 +81,23 @@ class CsvComparer:
     A class to compare delimited string representations of numerical data.
     """
 
-    def __init__(self, separator=","):
+    def __init__(self, separator: str = ",", closeness_threshold: float = 0.01):
+        """
+        Create a new comparer.
+
+        :param separator: the field separator to use when comparing lines
+        :param closeness_threshold: the threshold used to determine whether
+               two values are close, as a fraction. Values a and b are regarded
+               as close if they have the same sign and
+               max(abs(a), abs(b)) <= (1 + closeness_threshold) *
+               min(abs(a), abs(b)).
+        """
         self.separator = separator
         self.totals = {level: 0 for level in EqualityLevel}
         self.first_difference_field = None
+        self.closeness_threshold = closeness_threshold
 
-    @staticmethod
-    def compare_field(string0: str, string1: str) -> EqualityLevel:
+    def compare_field(self, string0: str, string1: str) -> EqualityLevel:
         if string0 == string1:
             return EqualityLevel.IDENTICAL
 
@@ -144,11 +154,10 @@ class CsvComparer:
         elif actual_diff <= max_diff:
             return EqualityLevel.COMPATIBLE
         else:
-            return CsvComparer._unequal_or_close(positives[0], positives[1])
+            return self._unequal_or_close(positives[0], positives[1])
 
-    @staticmethod
-    def _unequal_or_close(a, b):
-        if max(a, b) <= min(a, b) * 1.01:
+    def _unequal_or_close(self, a, b):
+        if max(a, b) <= min(a, b) * (1 + self.closeness_threshold):
             return EqualityLevel.CLOSE
         else:
             return EqualityLevel.UNEQUAL
@@ -163,13 +172,8 @@ class CsvComparer:
 
     @staticmethod
     def sig_figs(literal: str) -> int:
-        match = re.match(r"^[-+]?([0-9]*)\.?([0-9]+)([eE][-+]?[0-9]+)?$",
-                         literal)
-        if match is None:
-            return -1
-        return \
-            len((match.group(1) + match.group(2)).lstrip("0"))
-            #sum([len(match.group(i)) for i in (1, 2)])
+        digits = CsvComparer.extract_mantissa_digits(literal)
+        return -1 if digits is None else len(digits)
 
     def compare_fields(self, fields0: List[str], fields1: List[str]) ->\
             Optional[FieldDifference]:
@@ -252,7 +256,7 @@ def main():
         lines1 = fh.readlines()
 
     separator = bytes(args.delimiter, "utf-8").decode("unicode_escape")
-    comparer = CsvComparer(separator=separator)
+    comparer = CsvComparer(separator=separator, closeness_threshold=0.01)
     result = comparer.compare_linelists(lines0, lines1)
 
     for level, count in sorted(list(comparer.totals.items()),

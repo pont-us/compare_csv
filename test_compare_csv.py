@@ -67,8 +67,10 @@ class TestCompareCsv(unittest.TestCase):
         self._check_totals_counts(1, 0, 0, 1, 1)
 
     def test_compare_field(self):
+        comparer = CsvComparer(",", 0.01)
+
         def check(expected, string0, string1):
-            actual = CsvComparer.compare_field(string0, string1)
+            actual = comparer.compare_field(string0, string1)
             self.assertEqual(expected, actual)
 
         check(EqualityLevel.UNEQUAL, "1", "2")
@@ -99,11 +101,13 @@ class TestCompareCsv(unittest.TestCase):
             value = (rnd.random() - 0.5) * 10**rnd.randint(0, 10)
             formatted0 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
             formatted1 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
-            level = CsvComparer.compare_field(formatted0, formatted1)
+            comparer = CsvComparer(",", 0.01)
+            level = comparer.compare_field(formatted0, formatted1)
             self.assertGreater(level.value, EqualityLevel.CLOSE.value)
 
     def test_sig_figs(self):
         self.assertEqual(5, CsvComparer.sig_figs("12.345"))
+        self.assertEqual(3, CsvComparer.sig_figs("0.0123"))
         self.assertEqual(4, CsvComparer.sig_figs("+1.234e-10"))
         self.assertEqual(3, CsvComparer.sig_figs("1.23E+10"))
         self.assertEqual(7, CsvComparer.sig_figs("-765.4321"))
