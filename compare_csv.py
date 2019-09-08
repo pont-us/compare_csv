@@ -242,9 +242,15 @@ class CsvComparer:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Compare two delimited files")
+    parser = argparse.ArgumentParser(
+        description="Compare numbers in two delimited files",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-d", "--delimiter", type=str, required=False,
                         help="delimiter between fields", default=",")
+    parser.add_argument("-t", "--threshold", type=float, required=False,
+                        help="threshold for considering values \"close\", "
+                             "as a decimal fraction of the smaller value",
+                        default=0.01)
     parser.add_argument("FILE1", type=str)
     parser.add_argument("FILE2", type=str)
     args = parser.parse_args()
@@ -256,7 +262,8 @@ def main():
         lines1 = fh.readlines()
 
     separator = bytes(args.delimiter, "utf-8").decode("unicode_escape")
-    comparer = CsvComparer(separator=separator, closeness_threshold=0.01)
+    comparer = CsvComparer(separator=separator,
+                           closeness_threshold=args.threshold)
     result = comparer.compare_linelists(lines0, lines1)
 
     for level, count in sorted(list(comparer.totals.items()),
