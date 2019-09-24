@@ -19,8 +19,6 @@ You should have received a copy of the GNU General Public License
 along with compare_csv.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
-import compare_csv
 from compare_csv import CsvComparer, EqualityLevel, FieldDifference
 import unittest
 import random
@@ -29,7 +27,7 @@ import random
 class TestCompareCsv(unittest.TestCase):
 
     def setUp(self):
-        self.comparer = compare_csv.CsvComparer(separator="\t")
+        self.comparer = CsvComparer(separator="\t")
 
     def _check_totals_counts(self, *expected):
         self.assertEqual(expected[0],
