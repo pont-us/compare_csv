@@ -1,17 +1,25 @@
-# compare_csv.py
+# compare_csv
 
 A tool to determine whether delimited text files contain essentially the
 same numerical data.
 
-## Description
+## Installation
 
-compare_csv is a utility for finding duplicates among delimited textual
-files containing numerical data (e.g. CSV files), even when the string
-representations of the data differ.
+The `compare_csv` package can be installed from source by running `pip3
+install .` or `python3 setup.py` within its directory. As well as the
+package `compare_csv`, this will install the command line utility
+`compare-csv`.
 
-compare_csv takes two delimited files with the same layout (i.e. same
-number of rows and columns) and compares them field by field. For each
-pair of corresponding fields, it determines a level of equality:
+## Command-line usage
+
+`compare-csv` is a command line utility for finding duplicates among
+delimited textual files containing numerical data (e.g. CSV files), even
+when the string representations of the data differ.
+
+`compare-csv` takes as its arguments two delimited files with the same
+layout (i.e. same number of rows and columns) and compares them field by
+field. For each pair of corresponding fields, it determines a level of
+equality:
 
 1. Identical: the character strings are equal.
 
@@ -37,11 +45,11 @@ pair of corresponding fields, it determines a level of equality:
    the same number, and the values they represent are not close in the sense
    defined above.
 
-When run on two files, compare_csv prints total counts for field pairs at
-each level of equality. For every field pair, the highest possible
+When run on two files, `compare-csv` prints total counts for field pairs
+at each level of equality. For every field pair, the highest possible
 equality level is given: for instance, if two fields are not identical but
 are numerically equal, then they will (by definition) also be compatible
-and close; in this case, `compare_csv` will report the equality level
+and close; in this case, `compare-csv` will report the equality level
 ‘numerically equal’.
 
 ## License

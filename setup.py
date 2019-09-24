@@ -20,7 +20,8 @@ setuptools.setup(
     classifiers=["Development Status :: 5 - Production/Stable",
                  "License :: OSI Approved :: "
                  "GNU General Public License v3 or later (GPLv3+)",
-                 "Topic :: Scientific/Engineering",
+                 "Topic :: Scientific/Engineering :: Information Analysis",
+                 "Environment :: Console",
                  "Programming Language :: Python :: 3",
                  "Intended Audience :: Science/Research"
                  ],
