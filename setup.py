@@ -6,10 +6,10 @@ with open(os.path.join(cwd, "README.md")) as fh:
     long_desc = fh.read()
 
 setuptools.setup(
-    name="compare_csv",
+    name="comparedecimal",
     version="1.0.0",
-    packages=["compare_csv"],
-    url="https://github.com/pont-us/compare_csv",
+    packages=["comparedecimal"],
+    url="https://github.com/pont-us/comparedecimal",
     license="GNU GPLv3+",
     author="Pontus Lurcock",
     author_email="pont@talvi.net",
@@ -26,6 +26,6 @@ setuptools.setup(
                  "Intended Audience :: Science/Research"
                  ],
     entry_points={"console_scripts":
-                      ["compare-csv=compare_csv.compare_csv:main"]
+                  ["comparecsv=comparedecimal.comparedecimal:main"]
                   }
 )
