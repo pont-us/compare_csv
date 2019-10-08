@@ -76,7 +76,7 @@ class EqualityLevel(Enum):
 FieldDifference = namedtuple("FieldDifference", "field_index string0 string1")
 
 
-class CsvComparer:
+class DecimalComparer:
     """
     A class to compare delimited string representations of numerical data.
     """
@@ -103,7 +103,7 @@ class CsvComparer:
 
         try:
             floats = [float(s) for s in (string0, string1)]
-            sig_figs = [CsvComparer.sig_figs(s) for s in (string0, string1)]
+            sig_figs = [DecimalComparer.sig_figs(s) for s in (string0, string1)]
         except ValueError:
             # If the strings are unequal and one or both can't be parsed
             # as floats, then they're clearly numerically unequal.
@@ -129,7 +129,7 @@ class CsvComparer:
         # We've now established that they have the same order of magnitude.
         # Next step is to compare the digits.
 
-        digits = [CsvComparer.extract_mantissa_digits(s)
+        digits = [DecimalComparer.extract_mantissa_digits(s)
                   for s in (string0, string1)]
         digits_padded = \
             [digits[i] + ("0" * (max(sig_figs) - sig_figs[i])) for i in (0, 1)]
@@ -172,7 +172,7 @@ class CsvComparer:
 
     @staticmethod
     def sig_figs(literal: str) -> int:
-        digits = CsvComparer.extract_mantissa_digits(literal)
+        digits = DecimalComparer.extract_mantissa_digits(literal)
         return -1 if digits is None else len(digits)
 
     def compare_fields(self, fields0: List[str], fields1: List[str]) ->\
@@ -262,8 +262,8 @@ def main():
         lines1 = fh.readlines()
 
     separator = bytes(args.delimiter, "utf-8").decode("unicode_escape")
-    comparer = CsvComparer(separator=separator,
-                           closeness_threshold=args.threshold)
+    comparer = DecimalComparer(separator=separator,
+                               closeness_threshold=args.threshold)
     result = comparer.compare_linelists(lines0, lines1)
 
     for level, count in sorted(list(comparer.totals.items()),

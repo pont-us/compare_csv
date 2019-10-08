@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with comparedecimal.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from comparedecimal import CsvComparer, EqualityLevel, FieldDifference
+from comparedecimal import DecimalComparer, EqualityLevel, FieldDifference
 import unittest
 import random
 
@@ -27,7 +27,7 @@ import random
 class TestCompareCsv(unittest.TestCase):
 
     def setUp(self):
-        self.comparer = CsvComparer(separator="\t")
+        self.comparer = DecimalComparer(separator="\t")
 
     def _check_totals_counts(self, *expected):
         self.assertEqual(expected[0],
@@ -65,7 +65,7 @@ class TestCompareCsv(unittest.TestCase):
         self._check_totals_counts(1, 0, 0, 1, 1)
 
     def test_compare_field(self):
-        comparer = CsvComparer(",", 0.01)
+        comparer = DecimalComparer(",", 0.01)
 
         def check(expected, string0, string1):
             actual = comparer.compare_field(string0, string1)
@@ -99,21 +99,21 @@ class TestCompareCsv(unittest.TestCase):
             value = (rnd.random() - 0.5) * 10**rnd.randint(0, 10)
             formatted0 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
             formatted1 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
-            comparer = CsvComparer(",", 0.01)
+            comparer = DecimalComparer(",", 0.01)
             level = comparer.compare_field(formatted0, formatted1)
             self.assertGreater(level.value, EqualityLevel.CLOSE.value)
 
     def test_sig_figs(self):
-        self.assertEqual(5, CsvComparer.sig_figs("12.345"))
-        self.assertEqual(3, CsvComparer.sig_figs("0.0123"))
-        self.assertEqual(4, CsvComparer.sig_figs("+1.234e-10"))
-        self.assertEqual(3, CsvComparer.sig_figs("1.23E+10"))
-        self.assertEqual(7, CsvComparer.sig_figs("-765.4321"))
-        self.assertEqual(1, CsvComparer.sig_figs("8"))
-        self.assertEqual(10, CsvComparer.sig_figs("-12345.12345e11"))
-        self.assertEqual(-1, CsvComparer.sig_figs("not a number"))
-        self.assertEqual(-1, CsvComparer.sig_figs("nan"))
-        self.assertEqual(-1, CsvComparer.sig_figs("inf"))
+        self.assertEqual(5, DecimalComparer.sig_figs("12.345"))
+        self.assertEqual(3, DecimalComparer.sig_figs("0.0123"))
+        self.assertEqual(4, DecimalComparer.sig_figs("+1.234e-10"))
+        self.assertEqual(3, DecimalComparer.sig_figs("1.23E+10"))
+        self.assertEqual(7, DecimalComparer.sig_figs("-765.4321"))
+        self.assertEqual(1, DecimalComparer.sig_figs("8"))
+        self.assertEqual(10, DecimalComparer.sig_figs("-12345.12345e11"))
+        self.assertEqual(-1, DecimalComparer.sig_figs("not a number"))
+        self.assertEqual(-1, DecimalComparer.sig_figs("nan"))
+        self.assertEqual(-1, DecimalComparer.sig_figs("inf"))
 
     def test_compare_linelists_numerically_equal(self):
         self.assertIsNone(
