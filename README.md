@@ -1,14 +1,14 @@
 # comparedecimal
 
-A tool to determine whether delimited text files contain essentially the
-same numerical data.
+A package to compare decimal representations of floating-point numbers,
+including a command-line tool to report on the similarity between data in
+CSV files.
 
 ## Installation
 
 The `comparedecimal` package can be installed from source by running `pip3
-install .` or `python3 setup.py` within its directory. As well as the
-package `comparedecimal`, this will install the command line utility
-`comparecsv`.
+install .` or `python3 setup.py` within its directory. The command-line
+utility `comparecsv` will be installed as part of the package.
 
 ## Command-line usage
 
