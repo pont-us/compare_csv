@@ -44,22 +44,22 @@ class TestCompareCsv(unittest.TestCase):
     def test_compare_fields_equal(self):
         fields = ["one", "two", "3.5", "-10.7"]
         self.assertIsNone(
-            self.comparer.compare_fields(fields, fields)
+            self.comparer.compare_string_lists(fields, fields)
         )
         self._check_totals_counts(0, 0, 0, 0, 4)
 
     def test_compare_fields_unequal(self):
-        self.assertIsInstance(self.comparer.compare_fields(
+        self.assertIsInstance(self.comparer.compare_string_lists(
                 ["one", "two", "3.5", "-10.7"],
                 ["one", "3.5", "-10.7"]), FieldDifference)
 
     def test_compare_fields_numerically_equal(self):
-        self.assertIsNone(self.comparer.compare_fields(
+        self.assertIsNone(self.comparer.compare_string_lists(
             ["wibble", "3.5", "-10.00000"], ["wibble", "3.500", "-10"]))
         self._check_totals_counts(0, 0, 0, 2, 1)
 
     def test_compare_fields_numerically_unequal(self):
-        self.assertIsInstance(self.comparer.compare_fields(
+        self.assertIsInstance(self.comparer.compare_string_lists(
                 ["wibble", "3.5", "-10.00000"],
                 ["wibble", "3.500", "-11.00000"]), FieldDifference)
         self._check_totals_counts(1, 0, 0, 1, 1)
@@ -68,7 +68,7 @@ class TestCompareCsv(unittest.TestCase):
         comparer = DecimalComparer(",", 0.01)
 
         def check(expected, string0, string1):
-            actual = comparer.compare_field(string0, string1)
+            actual = comparer.compare_strings(string0, string1)
             self.assertEqual(expected, actual)
 
         check(EqualityLevel.UNEQUAL, "1", "2")
@@ -100,31 +100,31 @@ class TestCompareCsv(unittest.TestCase):
             formatted0 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
             formatted1 = "{:.{prec}g}".format(value, prec=rnd.randint(1, 7))
             comparer = DecimalComparer(",", 0.01)
-            level = comparer.compare_field(formatted0, formatted1)
+            level = comparer.compare_strings(formatted0, formatted1)
             self.assertGreater(level.value, EqualityLevel.CLOSE.value)
 
     def test_sig_figs(self):
-        self.assertEqual(5, DecimalComparer.sig_figs("12.345"))
-        self.assertEqual(3, DecimalComparer.sig_figs("0.0123"))
-        self.assertEqual(4, DecimalComparer.sig_figs("+1.234e-10"))
-        self.assertEqual(3, DecimalComparer.sig_figs("1.23E+10"))
-        self.assertEqual(7, DecimalComparer.sig_figs("-765.4321"))
-        self.assertEqual(1, DecimalComparer.sig_figs("8"))
-        self.assertEqual(10, DecimalComparer.sig_figs("-12345.12345e11"))
-        self.assertEqual(-1, DecimalComparer.sig_figs("not a number"))
-        self.assertEqual(-1, DecimalComparer.sig_figs("nan"))
-        self.assertEqual(-1, DecimalComparer.sig_figs("inf"))
+        self.assertEqual(5, DecimalComparer._sig_figs("12.345"))
+        self.assertEqual(3, DecimalComparer._sig_figs("0.0123"))
+        self.assertEqual(4, DecimalComparer._sig_figs("+1.234e-10"))
+        self.assertEqual(3, DecimalComparer._sig_figs("1.23E+10"))
+        self.assertEqual(7, DecimalComparer._sig_figs("-765.4321"))
+        self.assertEqual(1, DecimalComparer._sig_figs("8"))
+        self.assertEqual(10, DecimalComparer._sig_figs("-12345.12345e11"))
+        self.assertEqual(-1, DecimalComparer._sig_figs("not a number"))
+        self.assertEqual(-1, DecimalComparer._sig_figs("nan"))
+        self.assertEqual(-1, DecimalComparer._sig_figs("inf"))
 
     def test_compare_linelists_numerically_equal(self):
         self.assertIsNone(
-            self.comparer.compare_linelists(
+            self.comparer.compare_line_lists(
                 ["same1", "same2\tsame2", "same\t3.00\t0", "same4\tsame4"],
                 ["same1", "same2\tsame2", "same\t3.0\t0.0", "same4\tsame4"],
             ))
         self._check_totals_counts(0, 0, 0, 2, 6)
 
     def test_compare_linelists_numerically_unequal(self):
-        self.assertIsInstance(self.comparer.compare_linelists(
+        self.assertIsInstance(self.comparer.compare_line_lists(
                 ["same1", "same2\tsame2", "same\t3.1\t0", "same4\tsame4"],
                 ["same1", "same2\tsame2", "same\t3.0\t0.0", "same4\tsame4"],
             ), str)
@@ -132,7 +132,7 @@ class TestCompareCsv(unittest.TestCase):
 
     def test_compare_linelists_modulo_quotation_marks(self):
         self.assertIsNone(
-            self.comparer.compare_linelists(
+            self.comparer.compare_line_lists(
                 ["one\ttwo\tthree"],
                 ["one\t\"two\"\tthree"]
             ))

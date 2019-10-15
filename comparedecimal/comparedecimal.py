@@ -32,6 +32,41 @@ from enum import Enum
 from typing import List, Optional
 
 
+def main():
+    parser = argparse.ArgumentParser(
+        description="Compare numbers in two delimited files",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-d", "--delimiter", type=str, required=False,
+                        help="delimiter between fields", default=",")
+    parser.add_argument("-t", "--threshold", type=float, required=False,
+                        help="threshold for considering values \"close\", "
+                             "as a decimal fraction of the smaller value",
+                        default=0.01)
+    parser.add_argument("FILE1", type=str)
+    parser.add_argument("FILE2", type=str)
+    args = parser.parse_args()
+
+    with open(args.FILE1) as fh:
+        lines0 = fh.readlines()
+
+    with open(args.FILE2) as fh:
+        lines1 = fh.readlines()
+
+    separator = bytes(args.delimiter, "utf-8").decode("unicode_escape")
+    comparer = DecimalComparer(separator=separator,
+                               closeness_threshold=args.threshold)
+    result = comparer.compare_line_lists(lines0, lines1)
+
+    for level, count in sorted(list(comparer.totals.items()),
+                               key=lambda x: x[0].value):
+        print("{:10d} {}".format(count, level.description))
+
+    if result is None:
+        print("The files contain the same values.")
+    else:
+        print("First difference:", result)
+
+
 class EqualityLevel(Enum):
     """
     Represents the degree of similarity between two strings.
@@ -97,13 +132,27 @@ class DecimalComparer:
         self.first_difference_field = None
         self.closeness_threshold = closeness_threshold
 
-    def compare_field(self, string0: str, string1: str) -> EqualityLevel:
+    def compare_strings(self, decimal0: str, decimal1: str):
+        """
+        Compare two strings, attempting to interpret them as decimal numbers.
+
+        :param decimal0: a string
+        :param decimal1: another string
+        :return: the level of equality which the two strings have when
+           interpreted as decimal representations of real numbers
+        """
+        level = self._compare_strings(decimal0, decimal1)
+        self.totals[level] += 1
+        return level
+
+    def _compare_strings(self, string0: str, string1: str) -> EqualityLevel:
         if string0 == string1:
             return EqualityLevel.IDENTICAL
 
         try:
             floats = [float(s) for s in (string0, string1)]
-            sig_figs = [DecimalComparer.sig_figs(s) for s in (string0, string1)]
+            sig_figs =\
+                [DecimalComparer._sig_figs(s) for s in (string0, string1)]
         except ValueError:
             # If the strings are unequal and one or both can't be parsed
             # as floats, then they're clearly numerically unequal.
@@ -129,7 +178,7 @@ class DecimalComparer:
         # We've now established that they have the same order of magnitude.
         # Next step is to compare the digits.
 
-        digits = [DecimalComparer.extract_mantissa_digits(s)
+        digits = [DecimalComparer._extract_mantissa_digits(s)
                   for s in (string0, string1)]
         digits_padded = \
             [digits[i] + ("0" * (max(sig_figs) - sig_figs[i])) for i in (0, 1)]
@@ -156,26 +205,7 @@ class DecimalComparer:
         else:
             return self._unequal_or_close(positives[0], positives[1])
 
-    def _unequal_or_close(self, a, b):
-        if max(a, b) <= min(a, b) * (1 + self.closeness_threshold):
-            return EqualityLevel.CLOSE
-        else:
-            return EqualityLevel.UNEQUAL
-
-    @staticmethod
-    def extract_mantissa_digits(literal: str) -> Optional[str]:
-        match = re.match(r"^[-+]?([0-9]*)\.?([0-9]+)([eE][-+]?[0-9]+)?$",
-                         literal)
-        if match is None:
-            return None
-        return (match.group(1) + match.group(2)).lstrip("0")
-
-    @staticmethod
-    def sig_figs(literal: str) -> int:
-        digits = DecimalComparer.extract_mantissa_digits(literal)
-        return -1 if digits is None else len(digits)
-
-    def compare_fields(self, fields0: List[str], fields1: List[str]) ->\
+    def compare_string_lists(self, fields0: List[str], fields1: List[str]) ->\
             Optional[FieldDifference]:
         """
         Compare two lists of strings. If they're equal, return None. If not,
@@ -197,8 +227,7 @@ class DecimalComparer:
 
         first_difference = None
         for i in range(len(fields0)):
-            level = self.compare_field(fields0[i], fields1[i])
-            self.totals[level] += 1
+            level = self.compare_strings(fields0[i], fields1[i])
             if level == EqualityLevel.UNEQUAL and \
                     first_difference is None:
                 first_difference = FieldDifference(
@@ -207,26 +236,34 @@ class DecimalComparer:
 
         return first_difference
 
-    def compare_linelists(self, list0: List[str], list1: List[str]) ->\
+    def compare_line_lists(self, lines0: List[str], lines1: List[str]) ->\
             Optional[str]:
+        """
+        Compare two lists of lines, each containing multiple fields.
 
-        if len(list0) != len(list1):
+        :param lines0: a list of lines
+        :param lines1: another list of lines
+        :return: a string describing the first difference, or ``None``
+           if the lists are equal
+        """
+
+        if len(lines0) != len(lines1):
             return "Unequal numbers of lines ({}, {})".\
-                format(len(list0), len(list1))
+                format(len(lines0), len(lines1))
 
         fields = []
-        for line_list in list0, list1:
+        for line_list in lines0, lines1:
             fields_list = []
             fields.append(fields_list)
             reader = csv.reader(line_list,
                                 delimiter=self.separator,
-                                skipinitialspace=True,)
+                                skipinitialspace=True)
             for row in reader:
                 fields_list.append(row)
 
         first_difference = None
         for line in range(len(fields[0])):
-            result = self.compare_fields(fields[0][line], fields[1][line])
+            result = self.compare_string_lists(fields[0][line], fields[1][line])
             if result is not None and first_difference is None:
                 if result.field_index == -1:
                     first_difference = \
@@ -240,40 +277,24 @@ class DecimalComparer:
 
         return first_difference
 
+    def _unequal_or_close(self, a, b):
+        if max(a, b) <= min(a, b) * (1 + self.closeness_threshold):
+            return EqualityLevel.CLOSE
+        else:
+            return EqualityLevel.UNEQUAL
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Compare numbers in two delimited files",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-d", "--delimiter", type=str, required=False,
-                        help="delimiter between fields", default=",")
-    parser.add_argument("-t", "--threshold", type=float, required=False,
-                        help="threshold for considering values \"close\", "
-                             "as a decimal fraction of the smaller value",
-                        default=0.01)
-    parser.add_argument("FILE1", type=str)
-    parser.add_argument("FILE2", type=str)
-    args = parser.parse_args()
+    @staticmethod
+    def _extract_mantissa_digits(literal: str) -> Optional[str]:
+        match = re.match(r"^[-+]?([0-9]*)\.?([0-9]+)([eE][-+]?[0-9]+)?$",
+                         literal)
+        if match is None:
+            return None
+        return (match.group(1) + match.group(2)).lstrip("0")
 
-    with open(args.FILE1) as fh:
-        lines0 = fh.readlines()
-
-    with open(args.FILE2) as fh:
-        lines1 = fh.readlines()
-
-    separator = bytes(args.delimiter, "utf-8").decode("unicode_escape")
-    comparer = DecimalComparer(separator=separator,
-                               closeness_threshold=args.threshold)
-    result = comparer.compare_linelists(lines0, lines1)
-
-    for level, count in sorted(list(comparer.totals.items()),
-                               key=lambda x: x[0].value):
-        print("{:10d} {}".format(count, level.description))
-
-    if result is None:
-        print("The files contain the same values.")
-    else:
-        print("First difference:", result)
+    @staticmethod
+    def _sig_figs(literal: str) -> int:
+        digits = DecimalComparer._extract_mantissa_digits(literal)
+        return -1 if digits is None else len(digits)
 
 
 if __name__ == "__main__":
