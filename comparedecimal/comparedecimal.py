@@ -33,6 +33,17 @@ from typing import List, Optional
 
 
 def main():
+    """
+    Compare two delimited files specified on the command line
+
+    Run this module as a command-line utility with files and options
+    specified as command-line arguments. The files will be read and
+    compared using DecimalComparer.compare_line_lists, and the results
+    of comparison written to the standard output in a human-readable
+    format.
+
+    :return: None
+    """
     parser = argparse.ArgumentParser(
         description="Compare numbers in two delimited files",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -114,6 +125,11 @@ FieldDifference = namedtuple("FieldDifference", "field_index string0 string1")
 class DecimalComparer:
     """
     A class to compare delimited string representations of numerical data.
+
+    An instance of this class maintains a count of the total number
+    of comparison results for each equality level, which can be helpful in
+    providing an overview of the similarity between two files. This count is
+    stored in the instance attribute ``totals``.
     """
 
     def __init__(self, separator: str = ",", closeness_threshold: float = 0.01):
@@ -127,14 +143,18 @@ class DecimalComparer:
                max(abs(a), abs(b)) <= (1 + closeness_threshold) *
                min(abs(a), abs(b)).
         """
-        self.separator = separator
-        self.totals = {level: 0 for level in EqualityLevel}
-        self.first_difference_field = None
-        self.closeness_threshold = closeness_threshold
+        self.separator = separator  # type: str
+        """the field separator to use when comparing lines"""
+        self.totals = {level: 0 for level in EqualityLevel}  # type: dict
+        """an accumulator to count comparison results for each equality level"""
+        self.closeness_threshold = closeness_threshold  # type: float
+        """the fractional threshold at which values are regarded as close"""
 
-    def compare_strings(self, decimal0: str, decimal1: str):
+    def compare_strings(self, decimal0: str, decimal1: str) -> EqualityLevel:
         """
         Compare two strings, attempting to interpret them as decimal numbers.
+        This object's ``totals`` attribute will be updated with the result
+        of the comparison.
 
         :param decimal0: a string
         :param decimal1: another string
@@ -214,6 +234,8 @@ class DecimalComparer:
         EqualityLevel.UNEQUAL level of equality. "Equality" therefore
         includes the possibility that two strings are different decimal
         representations of the same number (e.g. "3.0" and "3.01").
+        This object's ``totals`` attribute will be updated with the results
+        of the comparisons.
 
         :param fields0: a list of strings
         :param fields1: another list of strings
@@ -240,6 +262,10 @@ class DecimalComparer:
             Optional[str]:
         """
         Compare two lists of lines, each containing multiple fields.
+        This object's ``separator`` object will be used as the separator
+        when splitting a line into fields.
+        This object's ``totals`` attribute will be updated
+        with the results of the comparisons.
 
         :param lines0: a list of lines
         :param lines1: another list of lines
@@ -277,7 +303,7 @@ class DecimalComparer:
 
         return first_difference
 
-    def _unequal_or_close(self, a, b):
+    def _unequal_or_close(self, a: float, b: float) -> EqualityLevel:
         if max(a, b) <= min(a, b) * (1 + self.closeness_threshold):
             return EqualityLevel.CLOSE
         else:
