@@ -14,7 +14,7 @@ setuptools.setup(
     author="Pontus Lurcock",
     author_email="pont@talvi.net",
     description=
-    "Determine whether delimited text files contain the same numerical data.",
+    "Compare decimal representations of floating-point numbers.",
     long_description_content_type="text/markdown",
     long_description=long_desc,
     classifiers=["Development Status :: 5 - Production/Stable",
